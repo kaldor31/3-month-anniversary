@@ -1299,6 +1299,10 @@ function MusicQuestScreen({ onContinue }: { onContinue: () => void }) {
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
+  // Tracks whose mp3 has already been requested — shared between the
+  // background prefetch queue and the "just opened" priority fetch below,
+  // so neither one re-requests a file the other already started.
+  const fetchStartedRef = useRef<Set<string>>(new Set());
   const allUnlocked = unlocked.size === MUSIC_TRACKS.length;
 
   useEffect(() => { savePersisted("lyra-quest-unlocked", Array.from(unlocked)); }, [unlocked]);
@@ -1323,11 +1327,25 @@ function MusicQuestScreen({ onContinue }: { onContinue: () => void }) {
     (async () => {
       for (const track of MUSIC_TRACKS) {
         if (cancelled) return;
+        if (fetchStartedRef.current.has(track.id)) continue;
+        fetchStartedRef.current.add(track.id);
         try { await fetch(track.audioSrc); } catch {}
       }
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // If she opens a track that isn't up to bat yet in the queue above (e.g.
+  // jumps straight to track 6 while 1 is still loading), don't make her
+  // wait behind the others — start that one immediately, out of order.
+  useEffect(() => {
+    if (!playerTrackId) return;
+    if (fetchStartedRef.current.has(playerTrackId)) return;
+    const track = MUSIC_TRACKS.find(t => t.id === playerTrackId);
+    if (!track) return;
+    fetchStartedRef.current.add(track.id);
+    fetch(track.audioSrc).catch(() => {});
+  }, [playerTrackId]);
 
   function openGuess(track: MusicTrack) {
     if (unlocked.has(track.id)) return;
