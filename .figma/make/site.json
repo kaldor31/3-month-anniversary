@@ -1,0 +1,10 @@
+{
+  "description": "Easily purchase movie tickets with a user-friendly interface that allows filtering by date, including past dates, enhancing the ticket-buying experience.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

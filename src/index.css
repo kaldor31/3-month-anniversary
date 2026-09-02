@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: #0b0b0f;
+  --color-foreground: #f0eee9;
+  --color-card: #13131a;
+  --color-card-foreground: #e8e6e1;
+  --color-primary: #e03434;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1e1e28;
+  --color-secondary-foreground: #b8b4ac;
+  --color-muted: #1a1a23;
+  --color-muted-foreground: #7d7a73;
+  --color-accent: #f4a261;
+  --color-accent-foreground: #0b0b0f;
+  --color-border: rgba(255,255,255,0.08);
+  --color-ring: #e03434;
+  --radius: 6px;
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Work Sans', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: #0b0b0f;
+  color: #f0eee9;
+  font-family: 'Work Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbars are hidden everywhere — the thin bar that shows up while
+   scrolling looked off, so scrolling stays fully functional but invisible. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
