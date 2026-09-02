@@ -1335,20 +1335,30 @@ function MusicQuestScreen({ onContinue }: { onContinue: () => void }) {
     return () => { cancelled = true; };
   }, []);
 
-  // If she opens a track that isn't up to bat yet in the queue above (e.g.
-  // jumps straight to track 6 while 1 is still loading), don't make her
-  // wait behind the others — start that one immediately, out of order.
-  useEffect(() => {
-    if (!playerTrackId) return;
-    if (fetchStartedRef.current.has(playerTrackId)) return;
-    const track = MUSIC_TRACKS.find(t => t.id === playerTrackId);
+  // Jump a track to the front of the queue, out of order. Used the moment
+  // she opens its guessing quiz — not only once she's answered correctly —
+  // so the file has the whole time she spends thinking about the answer to
+  // finish downloading, instead of racing the autoplay call with zero
+  // head start once the quiz closes.
+  function prioritizeFetch(trackId: string) {
+    if (fetchStartedRef.current.has(trackId)) return;
+    const track = MUSIC_TRACKS.find(t => t.id === trackId);
     if (!track) return;
     fetchStartedRef.current.add(track.id);
     fetch(track.audioSrc).catch(() => {});
+  }
+
+  // Covers opening an already-unlocked track straight from the list, which
+  // skips the guessing quiz (and its head-start fetch) entirely.
+  useEffect(() => {
+    if (playerTrackId) prioritizeFetch(playerTrackId);
   }, [playerTrackId]);
 
   function openGuess(track: MusicTrack) {
     if (unlocked.has(track.id)) return;
+    // Give the mp3 a head start while she's still reading the clue and
+    // picking an answer, so by the time she guesses right, it's ready.
+    prioritizeFetch(track.id);
     // "Вальс" is a surprise — it must never appear as a decoy option for any
     // other track, only ever show up as a choice when it's the actual
     // correct answer being guessed (i.e. when `track` itself is "Вальс").
