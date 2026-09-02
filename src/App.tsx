@@ -999,7 +999,6 @@ function QuestMapScreen({ onContinue }: { onContinue: () => void }) {
   const [found, setFound] = useState<Set<string>>(() => new Set(loadPersisted<string[]>("lyra-quest-found", [])));
   const [openPlace, setOpenPlace] = useState<QuestPlace | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [tilesReady, setTilesReady] = useState(false);
   const allFound = found.size === QUEST_PLACES.length;
 
   useEffect(() => { savePersisted("lyra-quest-found", Array.from(found)); }, [found]);
@@ -1012,24 +1011,6 @@ function QuestMapScreen({ onContinue }: { onContinue: () => void }) {
         ...(openPlace.videos ?? []).map(src => ({ type: "video" as const, src })),
       ]
     : [];
-
-  // Warm the browser's cache for the whole gallery as soon as the place
-  // card opens — before the lightbox is even tapped. Without this, each
-  // <img>/<video> only starts fetching the moment you swipe onto it, which
-  // reads as "slow to load" every time. Prefetching here means by the time
-  // she's swiping, everything's already sitting in cache.
-  useEffect(() => {
-    if (!openPlace) return;
-    const urls = [...(openPlace.photos ?? []), ...(openPlace.videos ?? [])];
-    urls.forEach(url => {
-      if (/\.(mp4|mov|webm)$/i.test(url)) {
-        fetch(url).catch(() => {});
-      } else {
-        const img = new Image();
-        img.src = url;
-      }
-    });
-  }, [openPlace]);
 
   // Lock background scroll — without this, dragging on this full-screen
   // takeover was scrolling the page underneath it.
@@ -1062,24 +1043,35 @@ function QuestMapScreen({ onContinue }: { onContinue: () => void }) {
     // "some places won't open." More breathing room between pins fixes that.
     map.setZoom(map.getZoom() + 1);
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    const tileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
+    const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
-      subdomains: "abcd",
     }).addTo(map);
-    // Markers are created immediately below, but painting them before the
-    // base tiles have loaded means they briefly float over a blank grey
-    // grid — and since their "found" styling comes from localStorage, an
-    // already-found pin shows its highlighted state right away too, which
-    // reads as spoiling progress before she's even seen the map. Wait for
-    // the tile layer's own load event (fires once the visible tiles are
-    // in) before revealing any pins at all; see the CSS fade below.
-    // Safety net: if tiles are ever slow/blocked again, don't leave pins
-    // hidden forever — reveal them after 4s regardless.
-    let revealed = false;
-    const reveal = () => { if (!revealed) { revealed = true; setTilesReady(true); } };
-    tileLayer.on("load", reveal);
-    setTimeout(reveal, 4000);
+
+    // Start warming the cache for every place's photos/videos as soon as
+    // the map itself is done loading, rather than waiting for each card to
+    // be opened — by the time she taps a pin, its gallery is already sitting
+    // in cache instead of only just starting to fetch.
+    let prefetched = false;
+    const prefetchAllMedia = () => {
+      if (prefetched) return;
+      prefetched = true;
+      QUEST_PLACES.forEach(place => {
+        const urls = [...(place.photos ?? []), ...(place.videos ?? [])];
+        urls.forEach(url => {
+          if (/\.(mp4|mov|webm)$/i.test(url)) {
+            fetch(url).catch(() => {});
+          } else {
+            const img = new Image();
+            img.src = url;
+          }
+        });
+      });
+    };
+    tileLayer.on("load", prefetchAllMedia);
+    // Safety net: if the tile 'load' event is ever slow/never fires, start
+    // prefetching anyway after a short delay.
+    setTimeout(prefetchAllMedia, 2500);
 
     QUEST_PLACES.forEach(place => {
       const handleClick = () => {
@@ -1145,8 +1137,6 @@ function QuestMapScreen({ onContinue }: { onContinue: () => void }) {
         .quest-pin--found { width:26px; height:26px; margin:-5px 0 0 -5px; background: radial-gradient(circle at 35% 30%, #ffd6ec, #e879c9 55%, #b455d9); box-shadow: 0 0 0 6px rgba(232,121,201,0.25), 0 0 18px rgba(232,121,201,0.55); animation: questPop .5s cubic-bezier(.34,1.56,.64,1); }
         @keyframes questPop { 0%{ transform:scale(0.3); } 60%{ transform:scale(1.15); } 100%{ transform:scale(1); } }
         .leaflet-control-attribution { font-size: 9px !important; opacity: 0.55; }
-        .leaflet-marker-pane { opacity: 0; transition: opacity 0.5s ease; }
-        .map-tiles-ready .leaflet-marker-pane { opacity: 1; }
         .leaflet-tile-pane { filter: grayscale(0.5) brightness(1.18) contrast(0.88) saturate(1.05); }
         .leaflet-touch .leaflet-bar a { width: 40px !important; height: 40px !important; line-height: 40px !important; font-size: 18px !important; }
       `}</style>
@@ -1159,7 +1149,7 @@ function QuestMapScreen({ onContinue }: { onContinue: () => void }) {
       </div>
 
       <div className="flex-1 relative z-0 mx-4 mb-4 rounded-2xl overflow-hidden" style={{border:"1px solid rgba(255,255,255,0.15)"}}>
-        <div ref={mapDivRef} className={`absolute inset-0 ${tilesReady ? "map-tiles-ready" : ""}`}/>
+        <div ref={mapDivRef} className="absolute inset-0"/>
         <div className="absolute inset-0 pointer-events-none" style={{
           background: "linear-gradient(135deg, rgba(255,182,222,0.28), rgba(196,155,255,0.22) 45%, rgba(154,196,255,0.24))",
           mixBlendMode: "soft-light",
