@@ -1062,9 +1062,10 @@ function QuestMapScreen({ onContinue }: { onContinue: () => void }) {
     // "some places won't open." More breathing room between pins fixes that.
     map.setZoom(map.getZoom() + 1);
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    const tileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
       maxZoom: 19,
+      subdomains: "abcd",
     }).addTo(map);
     // Markers are created immediately below, but painting them before the
     // base tiles have loaded means they briefly float over a blank grey
@@ -1073,7 +1074,12 @@ function QuestMapScreen({ onContinue }: { onContinue: () => void }) {
     // reads as spoiling progress before she's even seen the map. Wait for
     // the tile layer's own load event (fires once the visible tiles are
     // in) before revealing any pins at all; see the CSS fade below.
-    tileLayer.on("load", () => setTilesReady(true));
+    // Safety net: if tiles are ever slow/blocked again, don't leave pins
+    // hidden forever — reveal them after 4s regardless.
+    let revealed = false;
+    const reveal = () => { if (!revealed) { revealed = true; setTilesReady(true); } };
+    tileLayer.on("load", reveal);
+    setTimeout(reveal, 4000);
 
     QUEST_PLACES.forEach(place => {
       const handleClick = () => {
