@@ -1225,7 +1225,7 @@ function QuestMapScreen({ onContinue }: { onContinue: () => void }) {
               <CloseIcon size={18}/>
             </button>
           </div>
-          <div className="flex-1 flex items-center justify-center relative px-2" onClick={e=>e.stopPropagation()}>
+          <div className="flex-1 min-h-0 flex items-center justify-center relative px-2" onClick={e=>e.stopPropagation()}>
             {openMedia.length>1 && (
               <button
                 onClick={()=>setLightboxIndex(i => i===null ? i : (i - 1 + openMedia.length) % openMedia.length)}
@@ -1234,9 +1234,9 @@ function QuestMapScreen({ onContinue }: { onContinue: () => void }) {
               ><ArrowIcon dir="left"/></button>
             )}
             {openMedia[lightboxIndex].type==="video" ? (
-              <video src={openMedia[lightboxIndex].src} className="max-w-full max-h-full min-w-0 min-h-0 object-contain rounded-lg" controls autoPlay playsInline/>
+              <video src={openMedia[lightboxIndex].src} className="w-auto h-auto max-w-full max-h-full min-w-0 min-h-0 object-contain rounded-lg" controls autoPlay playsInline/>
             ) : (
-              <img src={openMedia[lightboxIndex].src} alt={openPlace.name} className="max-w-full max-h-full min-w-0 min-h-0 object-contain rounded-lg"/>
+              <img src={openMedia[lightboxIndex].src} alt={openPlace.name} className="w-auto h-auto max-w-full max-h-full min-w-0 min-h-0 object-contain rounded-lg"/>
             )}
             {openMedia.length>1 && (
               <button
