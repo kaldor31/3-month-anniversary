@@ -1145,7 +1145,7 @@ function QuestMapScreen({ onContinue }: { onContinue: () => void }) {
 
       {openPlace && (
         <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center p-4" style={{background:"rgba(20,10,25,0.6)",paddingBottom:"max(1rem, env(safe-area-inset-bottom))"}} onClick={()=>setOpenPlace(null)}>
-          <div className="rounded-2xl overflow-hidden w-full max-w-sm" style={{background:"#fdf5fb"}} onClick={e=>e.stopPropagation()}>
+          <div className="rounded-2xl overflow-hidden w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl" style={{background:"#fdf5fb"}} onClick={e=>e.stopPropagation()}>
             {openMedia.length>0 && (
               <button
                 onClick={()=>setLightboxIndex(0)}
