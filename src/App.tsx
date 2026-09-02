@@ -1313,6 +1313,22 @@ function MusicQuestScreen({ onContinue }: { onContinue: () => void }) {
     return () => { document.body.style.overflow = ""; };
   }, []);
 
+  // Warm the browser's cache for every track as soon as this screen mounts,
+  // instead of only starting to fetch a track's mp3 the moment it's played —
+  // by the time any track is picked, it's already sitting in cache. Fetched
+  // one at a time, in order, so the first tracks aren't left competing for
+  // bandwidth with the rest all firing at once.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      for (const track of MUSIC_TRACKS) {
+        if (cancelled) return;
+        try { await fetch(track.audioSrc); } catch {}
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   function openGuess(track: MusicTrack) {
     if (unlocked.has(track.id)) return;
     // "Вальс" is a surprise — it must never appear as a decoy option for any
