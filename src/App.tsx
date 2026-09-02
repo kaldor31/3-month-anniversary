@@ -74,7 +74,7 @@ interface MusicTrack {
 const MUSIC_TRACKS: MusicTrack[] = [
   { id: "t1", title: "КУБИК ЛЬДА", artist: "GONE.Fludd", clue: "Под эту песню мы чуть не деактивировались", audioSrc: track1 },
   { id: "t2", title: "Stateside", artist: "PinkPantheress, Zara Larsson", clue: "Я сказал, что украду в плейлист на третий день нашего знакомства", audioSrc: track2 },
-  { id: "t3", title: "Рядом С Тобой", artist: "GONE.Fludd & M00NCHILD", clue: "Эта песня у меня ассоциируется с тобой с самого нашего знакомства", audioSrc: track3 },
+  { id: "t3", title: "Рядом С Тобой", artist: "GONE.Fludd", clue: "Эта песня у меня ассоциируется с тобой с самого нашего знакомства", audioSrc: track3 },
   { id: "t4", title: "Ma meilleure ennemie", artist: "Stromae & Pomme", clue: "Наши красивейшие 4 кадра", audioSrc: track4 },
   { id: "t5", title: "Вальс", artist: "", clue: "Скебоб", audioSrc: track5 },
   { id: "t6", title: "UFO LUV", artist: "GONE.Fludd", clue: "Песня которая ассоциируется с нами", audioSrc: track6 },
